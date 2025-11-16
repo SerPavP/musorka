@@ -1,0 +1,317 @@
+{% extends 'classifier/base.html' %}
+{% load static %}
+{% load theory_tags %}
+
+{% block title %}Теория машинного обучения{% endblock %}
+
+{% block content %}
+<div class="theory-page-wrapper">
+    <div class="theory-page">
+        <div class="theory-sidebar">
+            <div class="sidebar-header">
+                <h2>Содержание</h2>
+            </div>
+            <nav class="theory-nav">
+                <ul class="nav-list">
+                    {% for nav_item in navigation %}
+                        {% if nav_item.level == 1 %}
+                            {% if not forloop.first %}
+                                </ul>
+                            </li>
+                            {% endif %}
+                            <li class="nav-item nav-level-{{ nav_item.level }} nav-parent" data-section-id="{{ nav_item.id }}">
+                                <div class="nav-parent-header">
+                                    <a href="#{{ nav_item.id }}" class="nav-link nav-parent-link" data-section="{{ nav_item.id }}">
+                                        {{ nav_item.text }}
+                                    </a>
+                                    <span class="nav-toggle">▶</span>
+                                </div>
+                                <ul class="nav-sublist" style="display: none;">
+                        {% else %}
+                            <li class="nav-item nav-level-{{ nav_item.level }}">
+                                <a href="#{{ nav_item.id }}" class="nav-link nav-child-link" data-section="{{ nav_item.id }}">
+                                    {{ nav_item.text }}
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if forloop.last %}
+                            </ul>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="theory-main">
+            {% if error_message %}
+            <div class="error-message">
+                <h3>Ошибка</h3>
+                <p>{{ error_message }}</p>
+            </div>
+            {% endif %}
+            
+            <div class="theory-controls">
+                <button id="show-all-btn" class="btn-show-all">Весь текст</button>
+            </div>
+            
+            {% if html_content %}
+            <div class="theory-content" id="theory-content-all" style="display: none;">
+                {{ html_content|safe }}
+            </div>
+            
+            {% for nav_item in navigation %}
+            <div class="theory-section" id="section-{{ nav_item.id }}" data-section-id="{{ nav_item.id }}" style="display: none;">
+                {% with section_content=sections_content|get_item:nav_item.id %}
+                    {% if section_content %}
+                        {{ section_content|safe }}
+                    {% else %}
+                        <p>Контент для раздела загружается...</p>
+                    {% endif %}
+                {% endwith %}
+            </div>
+            {% endfor %}
+            
+            {% else %}
+            <div class="error-message">
+                <h3>Контент не найден</h3>
+                <p>Не удалось загрузить содержимое из файла text.html</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Управление сворачиванием/разворачиванием подразделов
+    const navToggles = document.querySelectorAll('.nav-toggle');
+    navToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const parent = this.closest('.nav-parent');
+            const sublist = parent.querySelector('.nav-sublist');
+            const isExpanded = sublist.style.display !== 'none';
+            
+            sublist.style.display = isExpanded ? 'none' : 'block';
+            this.textContent = isExpanded ? '▶' : '▼';
+        });
+    });
+    
+    // Клик на родительскую ссылку также разворачивает/сворачивает
+    const parentLinks = document.querySelectorAll('.nav-parent-link');
+    parentLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const parent = this.closest('.nav-parent');
+            const toggle = parent.querySelector('.nav-toggle');
+            const sublist = parent.querySelector('.nav-sublist');
+            const isExpanded = sublist.style.display !== 'none';
+            
+            if (!isExpanded) {
+                sublist.style.display = 'block';
+                toggle.textContent = '▼';
+            }
+        });
+    });
+    
+    // Показ секций при клике на навигацию
+    const navLinks = document.querySelectorAll('.theory-nav .nav-link');
+    const allSections = document.querySelectorAll('.theory-section');
+    const allContent = document.getElementById('theory-content-all');
+    const showAllBtn = document.getElementById('show-all-btn');
+    
+    function showSection(sectionId) {
+        // Скрываем весь текст
+        if (allContent) allContent.style.display = 'none';
+        
+        // Скрываем все секции
+        allSections.forEach(section => {
+            section.style.display = 'none';
+        });
+        
+        // Показываем выбранную секцию
+        const targetSection = document.getElementById('section-' + sectionId);
+        if (targetSection) {
+            targetSection.style.display = 'block';
+            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // Обновляем активное состояние
+        navLinks.forEach(nav => nav.classList.remove('active'));
+        const activeLink = document.querySelector(`[data-section="${sectionId}"]`);
+        if (activeLink) activeLink.classList.add('active');
+    }
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sectionId = this.getAttribute('data-section');
+            if (sectionId) {
+                showSection(sectionId);
+            }
+        });
+    });
+    
+    // Кнопка "Весь текст"
+    if (showAllBtn && allContent) {
+        showAllBtn.addEventListener('click', function() {
+            // Скрываем все секции
+            allSections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Показываем весь текст
+            allContent.style.display = 'block';
+            allContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Убираем активное состояние с навигации
+            navLinks.forEach(nav => nav.classList.remove('active'));
+            
+            // Меняем текст кнопки
+            this.textContent = this.textContent === 'Весь текст' ? 'Скрыть весь текст' : 'Весь текст';
+        });
+    }
+    
+    // Показываем первую секцию по умолчанию
+    if (allSections.length > 0 && !allContent?.style.display) {
+        showSection(allSections[0].getAttribute('data-section-id'));
+    }
+});
+</script>
+
+<style>
+.theory-controls {
+    margin-bottom: 1.5rem;
+    padding: 1rem 0;
+}
+
+.btn-show-all {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+.btn-show-all:hover {
+    background: #229954;
+}
+
+.theory-content,
+.theory-section {
+    background: white;
+    border-radius: 10px;
+    padding: 3rem;
+    margin: 2rem 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    line-height: 1.8;
+    font-family: "Times New Roman", serif;
+    color: #333;
+}
+
+.theory-content h1,
+.theory-content h2,
+.theory-content h3,
+.theory-content h4,
+.theory-content h5,
+.theory-content h6,
+.theory-section h1,
+.theory-section h2,
+.theory-section h3,
+.theory-section h4,
+.theory-section h5,
+.theory-section h6 {
+    color: #555;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.theory-content p,
+.theory-section p {
+    margin-bottom: 1rem;
+    text-align: justify;
+}
+
+.theory-content table,
+.theory-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+
+.theory-content table td,
+.theory-content table th,
+.theory-section table td,
+.theory-section table th {
+    border: 1px solid #ddd;
+    padding: 0.75rem;
+}
+
+.theory-content table th,
+.theory-section table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.theory-content img,
+.theory-section img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Навигация с подразделами */
+.nav-parent {
+    position: relative;
+}
+
+.nav-parent-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.nav-parent-header .nav-link {
+    flex: 1;
+}
+
+.nav-toggle {
+    cursor: pointer;
+    user-select: none;
+    font-size: 1.2rem;
+    color: #667eea;
+    transition: transform 0.2s;
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    flex-shrink: 0;
+}
+
+.nav-toggle:hover {
+    color: #27ae60;
+    transform: scale(1.1);
+}
+
+.nav-sublist {
+    list-style: none;
+    padding-left: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.nav-sublist .nav-item {
+    margin: 0.25rem 0;
+}
+
+.nav-link.active {
+    background: rgba(39, 174, 96, 0.15);
+    color: #27ae60;
+    border-left-color: #27ae60;
+    font-weight: 600;
+}
+</style>
+{% endblock %}

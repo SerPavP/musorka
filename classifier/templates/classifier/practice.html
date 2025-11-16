@@ -1,0 +1,107 @@
+{% extends 'classifier/base.html' %}
+
+{% block title %}Практика машинного обучения{% endblock %}
+
+{% block content %}
+<div class="container">
+<div class="page-header">
+    <h1>Практика машинного обучения</h1>
+    <p class="page-description">Загрузите изображение отходов для автоматической классификации</p>
+</div>
+
+{% if error %}
+<div class="error-message">
+    <h3>Ошибка</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+{% if result %}
+<div class="result-section">
+    <h2>Результат классификации</h2>
+    
+    {% if uploaded_image_url %}
+    <div class="result-image">
+        <img src="{{ uploaded_image_url }}" alt="Загруженное изображение">
+    </div>
+    {% endif %}
+    
+    <div class="result-card">
+        <div class="result-main">
+            <h3>Тип отходов: <span class="result-class">{{ result.class }}</span></h3>
+            <p class="result-bin">Рекомендуется выбросить в: <strong>{{ result.waste_bin }}</strong></p>
+            <p class="result-confidence">Уверенность модели: <strong>{{ result.confidence|floatformat:2 }}%</strong></p>
+        </div>
+        
+        <div class="result-details">
+            <h4>Все предсказания:</h4>
+            <div class="predictions-list">
+                {% for class_name, confidence in result.all_predictions.items %}
+                <div class="prediction-item {% if class_name == result.class %}prediction-active{% endif %}">
+                    <span class="prediction-class">{{ class_name }}</span>
+                    <div class="prediction-bar">
+                        <div class="prediction-bar-fill" style="width: {{ confidence|floatformat:0 }}%"></div>
+                    </div>
+                    <span class="prediction-value">{{ confidence|floatformat:1 }}%</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="repeat-button-container">
+        <a href="{% url 'practice' %}" class="btn btn-primary btn-large">Повторить</a>
+    </div>
+</div>
+{% else %}
+<div class="upload-section">
+    <div class="upload-card">
+        <h2>Загрузка изображения</h2>
+        <form method="post" enctype="multipart/form-data" class="upload-form">
+            {% csrf_token %}
+            <div class="file-input-wrapper">
+                <input type="file" name="image" id="image-input" accept="image/*" required>
+                <label for="image-input" class="file-label">
+                    <span class="file-label-text">Выберите изображение</span>
+                    <span class="file-label-icon">📁</span>
+                </label>
+            </div>
+            <div class="preview-container" id="preview-container" style="display: none;">
+                <img id="preview-image" src="" alt="Предпросмотр">
+            </div>
+            <button type="submit" class="btn btn-primary btn-large">Классифицировать</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if not result %}
+<script>
+    // Предпросмотр изображения перед загрузкой
+    document.addEventListener('DOMContentLoaded', function() {
+        const imageInput = document.getElementById('image-input');
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const previewContainer = document.getElementById('preview-container');
+                        const previewImage = document.getElementById('preview-image');
+                        if (previewContainer && previewImage) {
+                            previewImage.src = e.target.result;
+                            previewContainer.style.display = 'block';
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>
+{% endif %}
+</div>
+{% endblock %}
+
+
+

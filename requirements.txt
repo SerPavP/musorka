@@ -1,0 +1,11 @@
+pandas
+numpy<2.0
+keras
+matplotlib
+opencv-python<4.9
+tensorflow
+seaborn
+scikit-learn
+django
+gunicorn
+

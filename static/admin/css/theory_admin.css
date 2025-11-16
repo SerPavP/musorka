@@ -1,0 +1,154 @@
+/* Стили для админ-панели теории */
+
+/* Улучшенное отображение списка */
+.field-display_title {
+    font-weight: 500;
+    min-width: 300px;
+}
+
+.field-level_badge {
+    text-align: center;
+}
+
+.field-is_active_badge {
+    text-align: center;
+}
+
+.field-children_count a {
+    color: #27ae60;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.field-children_count a:hover {
+    text-decoration: underline;
+}
+
+/* Улучшенные поля в форме */
+.field-section_id {
+    font-family: monospace;
+    background: #f5f5f5;
+    padding: 5px;
+    border-radius: 3px;
+}
+
+.field-content textarea {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* Подсказки */
+.help {
+    color: #666;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Иконки для уровней */
+.field-display_title::before {
+    margin-right: 5px;
+}
+
+/* Улучшенные inline формы */
+.inline-group .tabular {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.inline-group .tabular thead th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+/* Кнопки действий */
+.object-tools a {
+    background: #27ae60;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.object-tools a:hover {
+    background: #229954;
+}
+
+/* Фильтры */
+#changelist-filter {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+#changelist-filter h3 {
+    color: #27ae60;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 15px;
+    margin-bottom: 8px;
+}
+
+/* Поиск */
+#searchbar {
+    border: 2px solid #27ae60;
+    border-radius: 4px;
+    padding: 8px;
+}
+
+/* Сообщения */
+.messagelist .success {
+    background: #d4edda;
+    border-left: 4px solid #27ae60;
+}
+
+.messagelist .warning {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+/* Иерархическое отображение */
+.field-display_title {
+    padding-left: 0;
+}
+
+/* Улучшенные чекбоксы */
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* Стили для полей формы */
+.form-row {
+    margin-bottom: 15px;
+}
+
+.form-row label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* Улучшенные поля ввода */
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+    border-color: #27ae60;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.1);
+}
+

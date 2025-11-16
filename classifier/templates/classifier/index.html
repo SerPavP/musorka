@@ -1,0 +1,39 @@
+{% extends 'classifier/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Главная{% endblock %}
+
+{% block content %}
+<div class="container">
+<div class="hero-banner">
+    <div class="hero-content">
+        <h1 class="main-title">Классификация отходов с использованием методов интеллектуального анализа данных</h1>
+        <p class="subtitle">Онлайн учебное пособие</p>
+        <div class="hero-buttons">
+            <a href="{% url 'practice' %}" class="hero-btn">Практика машинного обучения</a>
+            <a href="{% url 'theory' %}" class="hero-btn">Теория машинного обучения</a>
+        </div>
+    </div>
+</div>
+
+<div class="content-section">
+    <div class="info-grid">
+        <div class="info-item">
+            <strong>АВТОРЫ</strong>
+            <p>{{ authors }}</p>
+        </div>
+        <div class="info-item">
+            <strong>УЧЕБНОЕ ЗАВЕДЕНИЕ</strong>
+            <p>{{ university }}</p>
+        </div>
+        <div class="info-item">
+            <strong>ГОД</strong>
+            <p>{{ year }}</p>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+
+
