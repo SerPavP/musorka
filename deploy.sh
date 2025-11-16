@@ -59,7 +59,13 @@ apt-get install -y \
     build-essential \
     libssl-dev \
     libffi-dev \
-    python3-dev
+    python3-dev \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1
 
 # ============================================
 # 3. Создание пользователя для приложения (если не существует)
@@ -136,9 +142,11 @@ ENV_FILE="$PROJECT_DIR/.env"
 
 if [ ! -f "$ENV_FILE" ]; then
     log_info "Создание .env файла..."
+    # Используем Python из venv для генерации SECRET_KEY
+    SECRET_KEY=$(sudo -u $APP_USER bash -c "cd $PROJECT_DIR && source venv/bin/activate && python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'")
     sudo -u $APP_USER cat > $ENV_FILE << EOF
 # Django Settings
-SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+SECRET_KEY=$SECRET_KEY
 DEBUG=False
 ALLOWED_HOSTS=wasteclfmodel.kz,www.wasteclfmodel.kz,localhost,127.0.0.1
 

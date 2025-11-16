@@ -57,6 +57,16 @@
 <div class="upload-section">
     <div class="upload-card">
         <h2>Загрузка изображения</h2>
+        <div class="upload-info" style="background: #f0f7ff; border-left: 4px solid #667eea; padding: 1rem; margin-bottom: 1.5rem; border-radius: 5px;">
+            <p style="margin: 0; color: #333;"><strong>Рекомендации по загрузке:</strong></p>
+            <ul style="margin: 0.5rem 0 0 1.5rem; color: #555;">
+                <li>Загружайте фотографии отходов (стекло, металл, пластик, бумага, органические отходы, прочий мусор)</li>
+                <li>Изображение должно быть четким и хорошо освещенным</li>
+                <li>Поддерживаемые форматы: JPG, PNG, GIF, WEBP</li>
+                <li>Рекомендуемый размер: не более 10 МБ</li>
+                <li>Для лучших результатов используйте фотографии с одного объекта отходов</li>
+            </ul>
+        </div>
         <form method="post" enctype="multipart/form-data" class="upload-form">
             {% csrf_token %}
             <div class="file-input-wrapper">
