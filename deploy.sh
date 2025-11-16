@@ -97,7 +97,36 @@ if [ -d "$PROJECT_DIR" ] && [ -f "$PROJECT_DIR/manage.py" ]; then
     log_info "Проект уже находится в $PROJECT_DIR"
 elif [ -d "$REAL_HOME/musorka" ] && [ -f "$REAL_HOME/musorka/manage.py" ]; then
     log_info "Проект найден в $REAL_HOME/musorka, перемещаем в $PROJECT_DIR..."
-    mv $REAL_HOME/musorka $PROJECT_DIR
+    
+    # Если целевая директория существует, удаляем её (если пустая) или перемещаем содержимое
+    if [ -d "$PROJECT_DIR" ]; then
+        # Проверяем, не является ли это уже правильным проектом
+        if [ -f "$PROJECT_DIR/manage.py" ]; then
+            log_info "Проект уже находится в $PROJECT_DIR"
+        elif [ -d "$PROJECT_DIR/musorka" ] && [ -f "$PROJECT_DIR/musorka/manage.py" ]; then
+            # Случай, когда musorka уже была перемещена внутрь
+            log_info "Проект найден в $PROJECT_DIR/musorka, перемещаем содержимое на уровень выше..."
+            # Перемещаем все файлы и скрытые файлы из musorka в PROJECT_DIR
+            shopt -s dotglob
+            mv $PROJECT_DIR/musorka/* $PROJECT_DIR/ 2>/dev/null || true
+            shopt -u dotglob
+            rmdir $PROJECT_DIR/musorka 2>/dev/null || true
+        else
+            # Удаляем пустую директорию или перемещаем содержимое из musorka
+            if [ -z "$(ls -A $PROJECT_DIR 2>/dev/null)" ]; then
+                rmdir $PROJECT_DIR
+                mv $REAL_HOME/musorka $PROJECT_DIR
+            else
+                # Перемещаем содержимое из musorka в PROJECT_DIR
+                log_info "Перемещаем содержимое проекта..."
+                cp -r $REAL_HOME/musorka/* $REAL_HOME/musorka/.[!.]* $PROJECT_DIR/ 2>/dev/null || cp -r $REAL_HOME/musorka/* $PROJECT_DIR/
+                rm -rf $REAL_HOME/musorka
+            fi
+        fi
+    else
+        # Целевая директория не существует, просто перемещаем
+        mv $REAL_HOME/musorka $PROJECT_DIR
+    fi
     log_info "Проект успешно перемещён"
 elif [ -d "$REAL_HOME/musorka" ]; then
     log_error "Директория $REAL_HOME/musorka найдена, но не содержит manage.py"
