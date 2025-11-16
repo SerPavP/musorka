@@ -76,19 +76,35 @@ fi
 # 4. Настройка директорий проекта
 # ============================================
 PROJECT_DIR="/var/www/wasteclfmodel"
-log_info "Создание директории проекта: $PROJECT_DIR"
-mkdir -p $PROJECT_DIR
-chown -R $APP_USER:$APP_USER $PROJECT_DIR
+log_info "Подготовка директории проекта: $PROJECT_DIR"
+# Создаём родительскую директорию, если нужно
+mkdir -p $(dirname $PROJECT_DIR)
 
 # ============================================
-# 5. Клонирование проекта из GitHub
+# 5. Проверка наличия проекта
 # ============================================
-log_info "Клонирование проекта из GitHub..."
-log_warn "ВАЖНО: Убедитесь, что проект уже загружен в $PROJECT_DIR"
-log_warn "Или выполните: git clone <your-repo-url> $PROJECT_DIR"
+log_info "Проверка наличия проекта..."
 
-# Если проект уже есть, переходим в директорию
+# Проверяем, существует ли директория проекта
+if [ ! -d "$PROJECT_DIR" ]; then
+    log_error "Проект не найден в $PROJECT_DIR"
+    log_error "Пожалуйста, клонируйте проект вручную:"
+    log_error "  git clone https://github.com/SerPavP/musorka.git $PROJECT_DIR"
+    exit 1
+fi
+
+# Проверяем наличие manage.py (признак Django проекта)
+if [ ! -f "$PROJECT_DIR/manage.py" ]; then
+    log_error "В директории $PROJECT_DIR не найден файл manage.py"
+    log_error "Убедитесь, что проект клонирован правильно"
+    exit 1
+fi
+
+log_info "Проект найден в $PROJECT_DIR"
 cd $PROJECT_DIR
+
+# Устанавливаем права доступа на проект
+chown -R $APP_USER:$APP_USER $PROJECT_DIR
 
 # ============================================
 # 6. Создание виртуального окружения
@@ -141,6 +157,12 @@ fi
 # ============================================
 log_info "Обновление settings.py для production..."
 SETTINGS_FILE="$PROJECT_DIR/waste_classification/settings.py"
+
+# Проверяем существование файла
+if [ ! -f "$SETTINGS_FILE" ]; then
+    log_error "Файл settings.py не найден: $SETTINGS_FILE"
+    exit 1
+fi
 
 # Создаем backup
 cp $SETTINGS_FILE ${SETTINGS_FILE}.backup
