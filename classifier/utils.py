@@ -32,4 +32,5 @@ FIXED_NAVIGATION_STRUCTURE = [
     {'id': 'section5-2', 'text': 'Архитектуры нейронных сетей', 'level': 2, 'order': 26, 'parent': 'section5'},
     {'id': 'section5-3', 'text': 'Аугментация данных', 'level': 2, 'order': 27, 'parent': 'section5'},
     {'id': 'section5-4', 'text': 'Пример: автоматическая классификация бытовых отходов', 'level': 2, 'order': 28, 'parent': 'section5'},
+    {'id': 'bibliography', 'text': 'Список литературы', 'level': 1, 'order': 29},
 ]
