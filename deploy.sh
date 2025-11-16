@@ -81,15 +81,33 @@ log_info "Подготовка директории проекта: $PROJECT_DIR
 mkdir -p $(dirname $PROJECT_DIR)
 
 # ============================================
-# 5. Проверка наличия проекта
+# 5. Поиск и перемещение проекта
 # ============================================
-log_info "Проверка наличия проекта..."
+log_info "Поиск проекта..."
 
-# Проверяем, существует ли директория проекта
-if [ ! -d "$PROJECT_DIR" ]; then
-    log_error "Проект не найден в $PROJECT_DIR"
-    log_error "Пожалуйста, клонируйте проект вручную:"
-    log_error "  git clone https://github.com/SerPavP/musorka.git $PROJECT_DIR"
+# Определяем домашнюю директорию реального пользователя (не root)
+if [ -n "$SUDO_USER" ]; then
+    REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+else
+    REAL_HOME="$HOME"
+fi
+
+# Проверяем, существует ли проект в целевой директории
+if [ -d "$PROJECT_DIR" ] && [ -f "$PROJECT_DIR/manage.py" ]; then
+    log_info "Проект уже находится в $PROJECT_DIR"
+elif [ -d "$REAL_HOME/musorka" ] && [ -f "$REAL_HOME/musorka/manage.py" ]; then
+    log_info "Проект найден в $REAL_HOME/musorka, перемещаем в $PROJECT_DIR..."
+    mv $REAL_HOME/musorka $PROJECT_DIR
+    log_info "Проект успешно перемещён"
+elif [ -d "$REAL_HOME/musorka" ]; then
+    log_error "Директория $REAL_HOME/musorka найдена, но не содержит manage.py"
+    log_error "Убедитесь, что это правильный Django проект"
+    exit 1
+else
+    log_error "Проект не найден ни в $PROJECT_DIR, ни в $REAL_HOME/musorka"
+    log_error "Пожалуйста, клонируйте проект:"
+    log_error "  git clone https://github.com/SerPavP/musorka.git ~/musorka"
+    log_error "Или переместите существующий проект в $PROJECT_DIR"
     exit 1
 fi
 
