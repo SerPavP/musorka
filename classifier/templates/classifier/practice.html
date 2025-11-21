@@ -28,17 +28,17 @@
     
     <div class="result-card">
         <div class="result-main">
-            <h3>Тип отходов: <span class="result-class">{{ result.class }}</span></h3>
+            <h3>Тип отходов: <span class="result-class">{{ result.class_ru }}</span></h3>
             <p class="result-bin">Рекомендуется выбросить в: <strong>{{ result.waste_bin }}</strong></p>
             <p class="result-confidence">Уверенность модели: <strong>{{ result.confidence|floatformat:2 }}%</strong></p>
         </div>
         
         <div class="result-details">
-            <h4>Все предсказания:</h4>
+            <h4>Все варианты классификации (отсортированы по вероятности):</h4>
             <div class="predictions-list">
-                {% for class_name, confidence in result.all_predictions.items %}
-                <div class="prediction-item {% if class_name == result.class %}prediction-active{% endif %}">
-                    <span class="prediction-class">{{ class_name }}</span>
+                {% for class_name_ru, confidence in result.all_predictions.items %}
+                <div class="prediction-item {% if class_name_ru == result.class_ru %}prediction-active{% endif %}">
+                    <span class="prediction-class">{{ class_name_ru }}</span>
                     <div class="prediction-bar">
                         <div class="prediction-bar-fill" style="width: {{ confidence|floatformat:0 }}%"></div>
                     </div>

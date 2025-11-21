@@ -1,81 +1,86 @@
 import os
 import numpy as np
-import cv2
+from PIL import Image
 import tensorflow as tf
+import tf_keras as keras  # Используем tf_keras для совместимости со старыми моделями
 from django.conf import settings
 
-# Категории отходов
-CATEGORIES = ['Glass', 'Metal', 'Organic', 'Paper', 'Plastic', 'Trash']
+# Категории отходов (из ноутбука EfficientNet)
+CATEGORIES = ['battery', 'biological', 'cardboard', 'clothes', 'glass',
+              'metal', 'paper', 'plastic', 'shoes', 'trash']
+
+# Русские названия категорий для отображения
+CATEGORIES_RU = {
+    'battery': 'Батарейки',
+    'biological': 'Органические отходы',
+    'cardboard': 'Картон',
+    'clothes': 'Одежда',
+    'glass': 'Стекло',
+    'metal': 'Металл',
+    'paper': 'Бумага',
+    'plastic': 'Пластик',
+    'shoes': 'Обувь',
+    'trash': 'Прочий мусор'
+}
 
 # Соответствие категорий мусорным контейнерам
 WASTE_BINS = {
-    'Glass': 'контейнер для стекла',
-    'Metal': 'контейнер для металла',
-    'Organic': 'контейнер для органических отходов',
-    'Paper': 'контейнер для бумаги',
-    'Plastic': 'контейнер для пластика',
-    'Trash': 'контейнер для прочего мусора'
+    'battery': 'специальный контейнер для батареек',
+    'biological': 'контейнер для органических отходов',
+    'cardboard': 'контейнер для бумаги и картона',
+    'clothes': 'контейнер для текстиля',
+    'glass': 'контейнер для стекла',
+    'metal': 'контейнер для металла',
+    'paper': 'контейнер для бумаги',
+    'plastic': 'контейнер для пластика',
+    'shoes': 'контейнер для текстиля',
+    'trash': 'контейнер для прочего мусора'
 }
 
 # Глобальная переменная для модели
 _model = None
 
-def load_model():
-    """Загружает модель классификации отходов"""
+def get_model():
+    """Загружает модель EfficientNet классификации отходов"""
     global _model
     if _model is None:
-        # Создаем модель такую же, как в ноутбуке
-        _model = tf.keras.Sequential([
-            tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu', input_shape=(64, 64, 3)),
-            tf.keras.layers.MaxPooling2D(2, 2),
-            tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu'),
-            tf.keras.layers.MaxPooling2D(2, 2),
-            tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation='relu'),
-            tf.keras.layers.MaxPooling2D(2, 2),
-            tf.keras.layers.Dropout(0.5),
-            tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(units=512, activation='relu'),
-            tf.keras.layers.Dense(units=6, activation='softmax')
-        ])
+        # Загружаем модель EfficientNet из ob_model
+        model_path = os.path.join(settings.BASE_DIR, 'ob_model', 'waste_classifier_efficientnet.h5')
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Модель не найдена по пути: {model_path}")
         
-        # Компилируем модель
-        _model.compile(
-            loss='categorical_crossentropy',
-            optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.001),
-            metrics=['accuracy']
-        )
-        
-        # Пытаемся загрузить веса, если они есть
-        weights_path = os.path.join(settings.BASE_DIR, 'classifier', 'model_weights.h5')
-        if os.path.exists(weights_path):
-            _model.load_weights(weights_path)
+        # Используем tf_keras для загрузки легаси модели
+        try:
+            # tf_keras предназначен для загрузки моделей Keras 2.x в TensorFlow 2.16+
+            os.environ["TF_USE_LEGACY_KERAS"] = "1"
+            _model = keras.models.load_model(model_path, compile=False)
+        except Exception as e:
+            raise RuntimeError(
+                f"Не удалось загрузить модель с помощью tf_keras: {e}\n"
+                f"Убедитесь, что установлены пакеты: tensorflow>=2.16 и tf_keras"
+            )
     
     return _model
 
 def preprocess_image(image_path):
-    """Предобрабатывает изображение для классификации"""
-    IMG_SIZE = 64
+    """Предобрабатывает изображение для классификации (224x224, как в ноутбуке)"""
+    IMG_SIZE = 224
     
-    # Читаем изображение
-    img_array = cv2.imread(image_path)
-    if img_array is None:
-        raise ValueError("Не удалось загрузить изображение")
+    # Загружаем изображение через PIL (как в ноутбуке)
+    img = Image.open(image_path).convert('RGB')
+    img_resized = img.resize((IMG_SIZE, IMG_SIZE))
     
-    # Изменяем размер
-    new_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))
-    
-    # Нормализуем
-    new_array = new_array.astype('float32')
-    new_array = new_array / 255.0
+    # Преобразуем в numpy массив и нормализуем
+    x = np.array(img_resized) / 255.0
     
     # Добавляем размерность батча
-    new_array = np.expand_dims(new_array, axis=0)
+    x = np.expand_dims(x, axis=0)
     
-    return new_array
+    return x
 
 def classify_waste(image_path):
     """Классифицирует изображение отходов"""
-    model = load_model()
+    model = get_model()
     
     # Предобрабатываем изображение
     img_array = preprocess_image(image_path)
@@ -87,14 +92,25 @@ def classify_waste(image_path):
     
     # Получаем название класса
     predicted_class = CATEGORIES[predicted_class_idx]
+    predicted_class_ru = CATEGORIES_RU[predicted_class]
     
     # Получаем информацию о мусорном контейнере
     waste_bin = WASTE_BINS[predicted_class]
     
+    # Создаем словарь всех предсказаний с русскими названиями
+    all_predictions = {}
+    for i in range(len(CATEGORIES)):
+        class_name = CATEGORIES[i]
+        class_name_ru = CATEGORIES_RU[class_name]
+        all_predictions[class_name_ru] = float(predictions[0][i]) * 100
+    
+    # Сортируем предсказания по убыванию вероятности
+    all_predictions_sorted = dict(sorted(all_predictions.items(), key=lambda x: x[1], reverse=True))
+    
     return {
         'class': predicted_class,
+        'class_ru': predicted_class_ru,
         'waste_bin': waste_bin,
         'confidence': confidence,
-        'all_predictions': {CATEGORIES[i]: float(predictions[0][i]) * 100 for i in range(len(CATEGORIES))}
+        'all_predictions': all_predictions_sorted
     }
-

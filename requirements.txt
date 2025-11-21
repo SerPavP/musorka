@@ -1,11 +1,12 @@
 pandas
-numpy<2.0
-keras
+numpy<2.0,>=1.24.0
+tensorflow==2.16.1
+tf_keras>=2.15.0
 matplotlib
 opencv-python<4.9
-tensorflow
 seaborn
 scikit-learn
 django
 gunicorn
+Pillow
 
