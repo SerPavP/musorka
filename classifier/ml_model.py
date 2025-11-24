@@ -3,6 +3,8 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 import tf_keras as keras  # Используем tf_keras для совместимости со старыми моделями
+from tf_keras.applications.efficientnet import preprocess_input
+from tf_keras.preprocessing.image import load_img, img_to_array
 from django.conf import settings
 
 # Категории отходов (из ноутбука EfficientNet)
@@ -64,14 +66,12 @@ def get_model():
 
 def preprocess_image(image_path):
     """Предобрабатывает изображение для классификации (224x224, как в ноутбуке)"""
-    IMG_SIZE = 224
+    # Загружаем изображение через tf_keras (как в ноутбуке)
+    img = load_img(image_path, target_size=(224, 224))
+    x = img_to_array(img)
     
-    # Загружаем изображение через PIL (как в ноутбуке)
-    img = Image.open(image_path).convert('RGB')
-    img_resized = img.resize((IMG_SIZE, IMG_SIZE))
-    
-    # Преобразуем в numpy массив и нормализуем
-    x = np.array(img_resized) / 255.0
+    # Применяем предобработку EfficientNet (ВАЖНО!)
+    x = preprocess_input(x)
     
     # Добавляем размерность батча
     x = np.expand_dims(x, axis=0)
